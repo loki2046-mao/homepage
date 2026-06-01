@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF 压缩工具</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    /* ===== CSS Variables ===== */
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #818cf8;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.25);
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --bg: #0f1117;
+      --bg-card: #1a1d2e;
+      --bg-card-hover: #222640;
+      --bg-surface: #252a3a;
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: #2d3348;
+      --border-hover: #3d4560;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-xs: 6px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.3);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+      --transition: 0.2s ease;
+      --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-card-hover: #f1f5f9;
+        --bg-surface: #f1f5f9;
+        --text: #1e293b;
+        --text-secondary: #475569;
+        --text-muted: #94a3b8;
+        --border: #e2e8f0;
+        --border-hover: #cbd5e1;
+        --shadow: 0 4px 24px rgba(0,0,0,0.08);
+        --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+      }
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== Layout ===== */
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    /* ===== Header ===== */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--primary), #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+    .header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* ===== Dropzone ===== */
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-card);
+    }
+    .dropzone:hover {
+      border-color: var(--primary);
+      background: var(--bg-card-hover);
+    }
+    .dropzone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-glow);
+      transform: scale(1.01);
+      box-shadow: 0 0 30px var(--primary-glow);
+    }
+    .dropzone-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: var(--bg-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+    }
+    .dropzone.dragover .dropzone-icon {
+      background: var(--primary);
+      transform: scale(1.1);
+    }
+    .dropzone-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--text-muted);
+      transition: color var(--transition);
+    }
+    .dropzone.dragover .dropzone-icon svg { color: #fff; }
+    .dropzone h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .dropzone p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .dropzone input { display: none; }
+
+    /* ===== Settings Panel ===== */
+    .settings {
+      margin-top: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: none;
+    }
+    .settings.visible { display: block; }
+    .settings-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .settings-group {
+      flex: 1;
+      min-width: 200px;
+    }
+    .settings-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .preset-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .preset-btn {
+      padding: 5px 12px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: var(--font);
+    }
+    .preset-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .preset-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .custom-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .custom-input input {
+      width: 80px;
+      padding: 6px 10px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text);
+      font-size: 13px;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .custom-input input:focus { border-color: var(--primary); }
+    .custom-input select {
+      padding: 6px 8px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+    .mode-btns {
+      display: flex;
+      gap: 8px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-align: center;
+      font-family: var(--font);
+    }
+    .mode-btn:hover { border-color: var(--primary); }
+    .mode-btn.active {
+      border-color: var(--primary);
+      background: var(--primary-glow);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .mode-btn small {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      margin-top: 2px;
+      opacity: 0.7;
+    }
+
+    /* ===== Action Bar ===== */
+    .action-bar {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn {
+      padding: 10px 24px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: var(--font);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 16px var(--primary-glow); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-secondary {
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--border-hover); color: var(--text); }
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+    .btn-success:hover { background: #34d399; transform: translateY(-1px); }
+    .btn-success:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .spacer { flex: 1; }
+
+    /* ===== File List ===== */
+    .file-list {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .file-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      transition: all var(--transition);
+      animation: slideIn 0.25s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .file-card:hover { border-color: var(--border-hover); }
+    .file-card-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .file-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .file-icon svg { width: 20px; height: 20px; color: var(--error); }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-name-edit {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 3px 8px;
+      width: 100%;
+      outline: none;
+      font-family: var(--font);
+      transition: border-color var(--transition);
+    }
+    .file-name-edit:focus { border-color: var(--primary); }
+    .rename-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+    .file-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+      margin-top: 2px;
+    }
+    .file-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+    }
+    .btn-icon:hover { border-color: var(--border-hover); color: var(--text); }
+    .btn-icon.danger:hover { border-color: var(--error); color: var(--error); }
+    .btn-icon svg { width: 14px; height: 14px; }
+
+    /* Progress */
+    .file-progress {
+      margin-top: 12px;
+      display: none;
+    }
+    .file-progress.visible { display: block; }
+    .progress-bar-bg {
+      height: 4px;
+      background: var(--bg-surface);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #a78bfa);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+      width: 0;
+    }
+    .progress-bar.done { background: var(--success); }
+    .progress-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Result */
+    .file-result {
+      margin-top: 10px;
+      display: none;
+      padding: 10px 12px;
+      background: var(--bg-surface);
+      border-radius: var(--radius-sm);
+    }
+    .file-result.visible { display: flex; align-items: center; gap: 12px; }
+    .result-stats {
+      flex: 1;
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .result-stats span { display: flex; align-items: center; gap: 4px; }
+    .result-stats .size-new { color: var(--success); font-weight: 600; }
+    .result-stats .ratio {
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .ratio.good { background: var(--success-glow); color: var(--success); }
+    .ratio.ok { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .ratio.bad { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+    .btn-download {
+      padding: 6px 14px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--success);
+      background: transparent;
+      color: var(--success);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: var(--font);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-download:hover { background: var(--success); color: #fff; }
+    .btn-download svg { width: 12px; height: 12px; }
+
+    /* Status badge */
+    .status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .status-badge.waiting { background: var(--bg-surface); color: var(--text-muted); }
+    .status-badge.processing { background: var(--primary-glow); color: var(--primary); }
+    .status-badge.done { background: var(--success-glow); color: var(--success); }
+    .status-badge.error { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+
+    /* ===== Toast ===== */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      font-size: 13px;
+      color: var(--text);
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+      max-width: 320px;
+    }
+    .toast.error { border-color: var(--error); }
+    .toast.success { border-color: var(--success); }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-10px); } }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 600px) {
+      .app { padding: 24px 16px 40px; }
+      .header h1 { font-size: 22px; }
+      .dropzone { padding: 32px 16px; }
+      .settings-row { flex-direction: column; gap: 12px; }
+      .settings-group { min-width: 0; }
+      .mode-btns { flex-direction: column; }
+      .file-card-top { flex-wrap: wrap; }
+      .result-stats { flex-wrap: wrap; gap: 8px; }
+      .action-bar { flex-wrap: wrap; }
+      .btn { flex: 1; justify-content: center; min-width: 0; }
+      .btn-secondary { flex: 0; }
+    }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <div class="header">
+      <h1>PDF 压缩工具</h1>
+      <p>纯前端压缩，文件不会上传到任何服务器</p>
+    </div>
+
+    <!-- Dropzone -->
+    <div class="dropzone" id="dropzone">
+      <div class="dropzone-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <h3>拖拽 PDF 文件到这里</h3>
+      <p>或点击选择文件 · 支持批量上传</p>
+      <input type="file" id="fileInput" accept=".pdf" multiple>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings" id="settings">
+      <div class="settings-row">
+        <div class="settings-group">
+          <label>目标文件大小</label>
+          <div class="preset-btns">
+            <button class="preset-btn" data-size="200">200KB</button>
+            <button class="preset-btn" data-size="500">500KB</button>
+            <button class="preset-btn" data-size="1024">1MB</button>
+            <button class="preset-btn" data-size="2048">2MB</button>
+            <button class="preset-btn active" data-size="5120">5MB</button>
+          </div>
+          <div class="custom-input">
+            <input type="number" id="customSize" placeholder="自定义" min="50" max="51200">
+            <select id="sizeUnit">
+              <option value="KB">KB</option>
+              <option value="MB">MB</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-group">
+          <label>压缩模式</label>
+          <div class="mode-btns">
+            <button class="mode-btn" data-mode="quality">
+              清晰度优先
+              <small>画质更高，文件稍大</small>
+            </button>
+            <button class="mode-btn active" data-mode="balanced">
+              均衡模式
+              <small>画质与体积平衡</small>
+            </button>
+            <button class="mode-btn" data-mode="size">
+              大小优先
+              <small>极致压缩，画质降低</small>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar" id="actionBar" style="display:none;">
+      <button class="btn btn-primary" id="btnCompress">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v20M2 12h20M17 7l-5 5-5-5"/>
+        </svg>
+        开始压缩
+      </button>
+      <button class="btn btn-secondary" id="btnClear">清空列表</button>
+      <div class="spacer"></div>
+      <button class="btn btn-success" id="btnDownloadAll" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        打包下载
+      </button>
+    </div>
+
+    <!-- File List -->
+    <div class="file-list" id="fileList"></div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ===== PDF.js Worker =====
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // ===== State =====
+    const state = {
+      files: [], // { id, file, status, originalSize, compressedSize, compressedBlob, progress, progressText }
+      targetSizeKB: 5120,
+      mode: 'balanced',
+    };
+    let idCounter = 0;
+
+    // ===== DOM =====
+    const $ = (sel) => document.querySelector(sel);
+    const dropzone = $('#dropzone');
+    const fileInput = $('#fileInput');
+    const settings = $('#settings');
+    const actionBar = $('#actionBar');
+    const fileList = $('#fileList');
+    const btnCompress = $('#btnCompress');
+    const btnClear = $('#btnClear');
+    const btnDownloadAll = $('#btnDownloadAll');
+    const customSize = $('#customSize');
+    const sizeUnit = $('#sizeUnit');
+    const toastContainer = $('#toastContainer');
+
+    // ===== Toast =====
+    function toast(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = msg;
+      toastContainer.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    // ===== Format Size =====
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    // ===== Add Files =====
+    function addFiles(fileArr) {
+      const pdfFiles = Array.from(fileArr).filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+      if (pdfFiles.length === 0) {
+        toast('请选择 PDF 文件', 'error');
+        return;
+      }
+      for (const f of pdfFiles) {
+        const entry = {
+          id: ++idCounter,
+          file: f,
+          status: 'waiting',
+          originalSize: f.size,
+          compressedSize: null,
+          compressedBlob: null,
+          compressedUrl: null,
+          outputName: f.name.replace(/\.pdf$/i, '') + '_compressed.pdf',
+          progress: 0,
+          progressText: '',
+        };
+        state.files.push(entry);
+      }
+      renderFileList();
+      settings.classList.add('visible');
+      actionBar.style.display = 'flex';
+      toast(`已添加 ${pdfFiles.length} 个文件`, 'success');
+    }
+
+    // ===== Remove File =====
+    function removeFile(id) {
+      const idx = state.files.findIndex(f => f.id === id);
+      if (idx === -1) return;
+      const entry = state.files[idx];
+      if (entry.compressedUrl) URL.revokeObjectURL(entry.compressedUrl);
+      state.files.splice(idx, 1);
+      renderFileList();
+      if (state.files.length === 0) {
+        settings.classList.remove('visible');
+        actionBar.style.display = 'none';
+        btnDownloadAll.style.display = 'none';
+      }
+    }
+
+    // ===== Render File List =====
+    function renderFileList() {
+      fileList.innerHTML = '';
+      for (const entry of state.files) {
+        const card = document.createElement('div');
+        card.className = 'file-card';
+        card.id = `file-${entry.id}`;
+
+        const statusClass = entry.status;
+        const statusText = { waiting: '等待中', processing: '压缩中', done: '已完成', error: '失败' }[entry.status];
+
+        let resultHTML = '';
+        if (entry.status === 'done') {
+          const ratio = Math.round((1 - entry.compressedSize / entry.originalSize) * 100);
+          const ratioClass = ratio >= 50 ? 'good' : ratio >= 20 ? 'ok' : 'bad';
+          const ratioText = ratio > 0 ? `-${ratio}%` : `+${Math.abs(ratio)}%`;
+          resultHTML = `
+            <div class="file-result visible">
+              <div class="result-stats">
+                <span>原始：<strong>${formatSize(entry.originalSize)}</strong></span>
+                <span>→</span>
+                <span class="size-new">${formatSize(entry.compressedSize)}</span>
+                <span class="ratio ${ratioClass}">${ratioText}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                <input class="file-name-edit" type="text" value="${entry.outputName}" 
+                  onchange="renameFile(${entry.id}, this.value)" 
+                  onfocus="this.select()" title="点击修改文件名">
+                <button class="btn-download" onclick="downloadFile(${entry.id})">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  下载
+                </button>
+              </div>
+            </div>`;
+        }
+
+        card.innerHTML = `
+          <div class="file-card-top">
+            <div class="file-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <div class="file-info">
+              <div class="file-name" title="${entry.file.name}">${entry.file.name}</div>
+              <div class="file-meta">
+                <span>${formatSize(entry.originalSize)}</span>
+              </div>
+            </div>
+            <div class="file-actions">
+              <span class="status-badge ${statusClass}">${statusText}</span>
+              <button class="btn-icon danger" onclick="removeFile(${entry.id})" title="移除">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="file-progress ${entry.status === 'processing' ? 'visible' : ''}">
+            <div class="progress-bar-bg">
+              <div class="progress-bar" style="width:${entry.progress}%"></div>
+            </div>
+            <div class="progress-text">
+              <span>${entry.progressText}</span>
+              <span>${Math.round(entry.progress)}%</span>
+            </div>
+          </div>
+          ${resultHTML}
+        `;
+        fileList.appendChild(card);
+      }
+    }
+
+    // ===== Update Single Card (in-place, no full re-render) =====
+    function updateCard(entry) {
+      const card = document.getElementById(`file-${entry.id}`);
+      if (!card) return;
+
+      // Update status badge
+      const badge = card.querySelector('.status-badge');
+      if (badge) {
+        const statusClass = entry.status;
+        const statusText = { waiting: '等待中', processing: '压缩中', done: '已完成', error: '失败' }[entry.status];
+        badge.className = `status-badge ${statusClass}`;
+        badge.textContent = statusText;
+      }
+
+      // Update progress bar
+      const progressSection = card.querySelector('.file-progress');
+      if (progressSection) {
+        if (entry.status === 'processing') {
+          progressSection.classList.add('visible');
+        } else {
+          progressSection.classList.remove('visible');
+        }
+        const bar = progressSection.querySelector('.progress-bar');
+        if (bar) bar.style.width = `${entry.progress}%`;
+        const textSpans = progressSection.querySelectorAll('.progress-text span');
+        if (textSpans.length >= 2) {
+          textSpans[0].textContent = entry.progressText;
+          textSpans[1].textContent = `${Math.round(entry.progress)}%`;
+        }
+      }
+
+      // Update result section when done
+      if (entry.status === 'done') {
+        let resultDiv = card.querySelector('.file-result');
+        if (!resultDiv) {
+          resultDiv = document.createElement('div');
+          resultDiv.className = 'file-result';
+          card.appendChild(resultDiv);
+        }
+        const ratio = Math.round((1 - entry.compressedSize / entry.originalSize) * 100);
+        const ratioClass = ratio >= 50 ? 'good' : ratio >= 20 ? 'ok' : 'bad';
+        const ratioText = ratio > 0 ? `-${ratio}%` : `+${Math.abs(ratio)}%`;
+        resultDiv.className = 'file-result visible';
+        resultDiv.innerHTML = `
+          <div class="result-stats">
+            <span>原始：<strong>${formatSize(entry.originalSize)}</strong></span>
+            <span>→</span>
+            <span class="size-new">${formatSize(entry.compressedSize)}</span>
+            <span class="ratio ${ratioClass}">${ratioText}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+            <input class="file-name-edit" type="text" value="${entry.outputName}" 
+              onchange="renameFile(${entry.id}, this.value)" 
+              onfocus="this.select()" title="点击修改文件名">
+            <button class="btn-download" onclick="downloadFile(${entry.id})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              下载
+            </button>
+          </div>`;
+      }
+    }
+
+    // ===== Dropzone Events =====
+    dropzone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) addFiles(e.target.files);
+      fileInput.value = '';
+    });
+
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length) addFiles(files);
+    });
+
+    // ===== Preset Buttons =====
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.targetSizeKB = parseInt(btn.dataset.size);
+        customSize.value = '';
+      });
+    });
+
+    customSize.addEventListener('input', () => {
+      if (customSize.value) {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        const val = parseFloat(customSize.value);
+        state.targetSizeKB = sizeUnit.value === 'MB' ? val * 1024 : val;
+      }
+    });
+    sizeUnit.addEventListener('change', () => {
+      if (customSize.value) {
+        const val = parseFloat(customSize.value);
+        state.targetSizeKB = sizeUnit.value === 'MB' ? val * 1024 : val;
+      }
+    });
+
+    // ===== Mode Buttons =====
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.mode = btn.dataset.mode;
+      });
+    });
+
+    // ===== Quality Range by Mode =====
+    function getQualityRange(mode) {
+      switch (mode) {
+        case 'quality': return { min: 0.55, max: 0.92, initial: 0.75 };
+        case 'balanced': return { min: 0.4, max: 0.85, initial: 0.65 };
+        case 'size': return { min: 0.2, max: 0.65, initial: 0.4 };
+        default: return { min: 0.4, max: 0.85, initial: 0.65 };
+      }
+    }
+
+    // ===== Scale Factor by Mode =====
+    function getScaleFactor(mode) {
+      switch (mode) {
+        case 'quality': return 1.5;
+        case 'balanced': return 1.0;
+        case 'size': return 0.7;
+        default: return 1.0;
+      }
+    }
+
+    // ===== Compress Single PDF =====
+    async function compressPDF(entry) {
+      entry.status = 'processing';
+      entry.progress = 0;
+      entry.progressText = '正在读取 PDF...';
+      updateCard(entry);
+
+      try {
+        const arrayBuffer = await entry.file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const numPages = pdf.numPages;
+        const targetBytes = state.targetSizeKB * 1024;
+        const qr = getQualityRange(state.mode);
+
+        // Adaptive: start with scale, lower it if needed (max 3 rounds)
+        let scaleFactor = getScaleFactor(state.mode);
+        let bestBlob = null;
+        const maxScaleRounds = 3;
+
+        for (let round = 0; round < maxScaleRounds; round++) {
+          // If not the first round, free previous canvases
+          let canvases = [];
+
+          // Render all pages to canvases at current scale
+          for (let i = 1; i <= numPages; i++) {
+            entry.progress = (i / numPages) * 35;
+            entry.progressText = `渲染页面 ${i}/${numPages}（分辨率 ${Math.round(scaleFactor * 100)}%）`;
+            updateCard(entry);
+
+            const page = await pdf.getPage(i);
+            const vp = page.getViewport({ scale: scaleFactor });
+            const c = document.createElement('canvas');
+            c.width = vp.width;
+            c.height = vp.height;
+            await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+            canvases.push({ canvas: c, w: vp.width, h: vp.height });
+          }
+
+          // Build PDF at given JPEG quality
+          const buildPDF = async (q) => {
+            const { PDFDocument } = PDFLib;
+            const doc = await PDFDocument.create();
+            for (const { canvas, w, h } of canvases) {
+              const url = canvas.toDataURL('image/jpeg', q);
+              const bytes = Uint8Array.from(atob(url.split(',')[1]), ch => ch.charCodeAt(0));
+              const img = await doc.embedJpg(bytes);
+              const p = doc.addPage([w, h]);
+              p.drawImage(img, { x: 0, y: 0, width: w, height: h });
+            }
+            return new Blob([await doc.save()], { type: 'application/pdf' });
+          };
+
+          // Binary search JPEG quality
+          let lo = qr.min, hi = qr.max, roundBest = null;
+
+          // Probe: check if even minimum quality is still over target
+          const minBlob = await buildPDF(qr.min);
+          if (minBlob.size <= targetBytes) {
+            roundBest = minBlob;
+            lo = qr.min;
+          } else {
+            // Even minimum quality is too big at this scale
+            bestBlob = minBlob; // keep as fallback
+            if (round < maxScaleRounds - 1) {
+              scaleFactor *= 0.7; // shrink resolution and retry
+              continue;
+            }
+            // Last round, just take what we have
+            break;
+          }
+
+          // Refine with binary search
+          for (let iter = 0; iter < 6; iter++) {
+            const q = (lo + hi) / 2;
+            entry.progress = 35 + ((iter + 1) / 6) * 55;
+            entry.progressText = `压缩中，质量 ${Math.round(q * 100)}%`;
+            updateCard(entry);
+
+            const blob = await buildPDF(q);
+            if (blob.size <= targetBytes) {
+              roundBest = blob;
+              lo = q;
+            } else {
+              hi = q;
+            }
+            if (hi - lo < 0.015) break;
+            await new Promise(r => setTimeout(r, 0));
+          }
+
+          if (roundBest) {
+            bestBlob = roundBest;
+            break; // reached target
+          }
+        }
+
+        if (!bestBlob) {
+          toast('无法压缩到目标大小，已尽可能压缩', 'error');
+        }
+
+        entry.compressedBlob = bestBlob;
+        entry.compressedSize = bestBlob.size;
+        entry.compressedUrl = URL.createObjectURL(bestBlob);
+        entry.status = 'done';
+        entry.progress = 100;
+        entry.progressText = '压缩完成';
+        updateCard(entry);
+
+      } catch (err) {
+        entry.status = 'error';
+        entry.progressText = err.message || '压缩失败';
+        entry.progress = 0;
+        updateCard(entry);
+        toast(entry.file.name + ' 压缩失败: ' + err.message, 'error');
+      }
+    }
+
+    // ===== Compress All =====
+    btnCompress.addEventListener('click', async () => {
+      const pending = state.files.filter(f => f.status === 'waiting' || f.status === 'error');
+      if (pending.length === 0) {
+        toast('没有需要压缩的文件', 'error');
+        return;
+      }
+
+      btnCompress.disabled = true;
+      btnCompress.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        压缩中...
+      `;
+
+      // Process files sequentially to avoid memory issues
+      for (const entry of pending) {
+        await compressPDF(entry);
+      }
+
+      btnCompress.disabled = false;
+      btnCompress.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v20M2 12h20M17 7l-5 5-5-5"/>
+        </svg>
+        开始压缩
+      `;
+
+      const doneCount = state.files.filter(f => f.status === 'done').length;
+      if (doneCount > 0) {
+        btnDownloadAll.style.display = 'inline-flex';
+        toast(`压缩完成！${doneCount} 个文件已就绪`, 'success');
+      }
+    });
+
+    // ===== Clear All =====
+    btnClear.addEventListener('click', () => {
+      state.files.forEach(f => { if (f.compressedUrl) URL.revokeObjectURL(f.compressedUrl); });
+      state.files = [];
+      renderFileList();
+      settings.classList.remove('visible');
+      actionBar.style.display = 'none';
+      btnDownloadAll.style.display = 'none';
+      toast('列表已清空');
+    });
+
+    // ===== Rename File =====
+    function renameFile(id, newName) {
+      const entry = state.files.find(f => f.id === id);
+      if (!entry) return;
+      // Ensure .pdf extension
+      if (!newName.toLowerCase().endsWith('.pdf')) newName += '.pdf';
+      entry.outputName = newName;
+    }
+
+    // ===== Download Single (with save-as dialog if available) =====
+    async function downloadFile(id) {
+      const entry = state.files.find(f => f.id === id);
+      if (!entry || !entry.compressedBlob) return;
+
+      // Try File System Access API for save-as dialog (Chrome/Edge)
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: entry.outputName,
+            types: [{ description: 'PDF 文件', accept: { 'application/pdf': ['.pdf'] } }],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(entry.compressedBlob);
+          await writable.close();
+          toast('已保存', 'success');
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return; // user cancelled
+        }
+      }
+      // Fallback: standard download
+      saveAs(entry.compressedBlob, entry.outputName);
+    }
+
+    // ===== Download All as ZIP =====
+    btnDownloadAll.addEventListener('click', async () => {
+      const doneFiles = state.files.filter(f => f.status === 'done' && f.compressedBlob);
+      if (doneFiles.length === 0) return;
+
+      btnDownloadAll.disabled = true;
+      btnDownloadAll.textContent = '打包中...';
+
+      try {
+        const zip = new JSZip();
+        for (const entry of doneFiles) {
+          const name = entry.file.name.replace(/\.pdf$/i, '') + '_compressed.pdf';
+          zip.file(name, entry.compressedBlob);
+        }
+        const content = await zip.generateAsync({ type: 'blob' });
+        saveAs(content, 'compressed_pdfs.zip');
+        toast('打包下载完成', 'success');
+      } catch (err) {
+        toast('打包失败: ' + err.message, 'error');
+      }
+
+      btnDownloadAll.disabled = false;
+      btnDownloadAll.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        打包下载
+      `;
+    });
+
+    // ===== Prevent default drag on window =====
+    window.addEventListener('dragover', e => e.preventDefault());
+    window.addEventListener('drop', e => e.preventDefault());
+  </script>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</body>
+</html>
