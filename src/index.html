@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0d0b0a" />
+    <title>HiLoki.ai · Loki Live House</title>
+    <meta
+      name="description"
+      content="走进 Loki 的场馆：认识赛博小熊猫 Loki，浏览她的文章、产品、教程、分享与长期创作。"
+    />
+    <meta property="og:title" content="HiLoki.ai · Loki Live House" />
+    <meta
+      property="og:description"
+      content="走进 Loki 的场馆：认识赛博小熊猫 Loki，浏览她的文章、产品、教程、分享与长期创作。"
+    />
+    <meta property="og:image" content="https://hiloki.ai/assets/images/share-cover.png" />
+    <meta property="og:url" content="https://hiloki.ai" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="HiLoki.ai" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="HiLoki.ai · Loki Live House" />
+    <meta
+      name="twitter:description"
+      content="走进 Loki 的场馆：认识赛博小熊猫 Loki，浏览她的文章、产品、教程、分享与长期创作。"
+    />
+    <meta name="twitter:image" content="https://hiloki.ai/assets/images/share-cover.png" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon-32x32.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/styles/base.css?v=20260627-1" />
+    <link rel="stylesheet" href="/assets/styles/home.css?v=20260627-3" />
+  </head>
+  <body data-theme="backstage">
+    <div class="lighting-curtain" aria-hidden="true">
+      <span>HOUSE LIGHTS</span>
+    </div>
+    <div class="venue-grain" aria-hidden="true"></div>
+    <div class="venue-light venue-light-left" aria-hidden="true"></div>
+    <div class="venue-light venue-light-right" aria-hidden="true"></div>
+
+    <header class="venue-header">
+      <a class="venue-brand" href="#headliner" aria-label="HiLoki.ai 首页">
+        <span class="venue-brand-mark">L</span>
+        <span>
+          <strong>HiLoki.ai</strong>
+          <small>LOKI LIVE HOUSE</small>
+        </span>
+      </a>
+
+      <nav class="venue-nav" aria-label="场馆导航">
+        <a href="#setlist"><i>01</i> 曲目单</a>
+        <a href="#albums"><i>02</i> 专辑墙</a>
+        <a href="#press"><i>03</i> 通告</a>
+        <a href="#rehearsal"><i>04</i> 排练室</a>
+        <a href="#backstage-corridor"><i>05</i> 后台</a>
+      </nav>
+
+      <div class="venue-actions">
+        <button class="ticket-trigger" type="button">
+          <span>ADMIT ONE</span>
+          <strong>取票</strong>
+        </button>
+        <button class="light-switch" type="button" aria-label="切换场馆灯光">
+          <span class="switch-copy">
+            <small>HOUSE LIGHT</small>
+            <strong>后台</strong>
+          </span>
+          <span class="switch-rail"><i></i></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="venue-root"></main>
+
+    <footer class="venue-footer">
+      <div>
+        <strong>HiLoki.ai</strong>
+        <span>一场持续更新、没有散场时间的个人演出。</span>
+      </div>
+      <div class="footer-links">
+        <a href="/articles">全部文章</a>
+        <a href="https://github.com/loki2046-mao" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="mailto:lokimao2046@gmail.com">Email</a>
+      </div>
+      <img class="loki-mascot footer-mascot" src="/assets/images/loki-broom.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" data-fallback="/assets/images/loki-broom.png" />
+      <span class="footer-code">VENUE NO. 2046 · BEIJING</span>
+    </footer>
+
+    <dialog class="spotlight-dialog" id="spotlight-dialog">
+      <button class="spotlight-close" type="button" aria-label="返回观众席">×</button>
+      <div id="spotlight-content"></div>
+    </dialog>
+
+    <dialog class="ticket-dialog" id="ticket-dialog">
+      <button class="spotlight-close ticket-close" type="button" aria-label="关闭取票机">×</button>
+      <div class="ticket-machine">
+        <div class="machine-screen">
+          <span class="scene-label">TICKET MACHINE / CONTACT</span>
+          <h2>请选择你的场次</h2>
+          <p>其实是选择以后在哪里遇见我。票不会过期，座位你说了算。</p>
+          <div class="channel-grid" id="channel-grid"></div>
+        </div>
+        <div class="ticket-slot"><span></span></div>
+        <div class="printed-ticket" id="printed-ticket"></div>
+      </div>
+    </dialog>
+
+    <script src="/assets/data/site-config.js?v=20260627-1"></script>
+    <script src="/assets/data/site-index.js?v=20260627-2"></script>
+    <script src="/assets/data/skill-pedals.js?v=20260627-2"></script>
+    <script type="module" src="/assets/scripts/home.js?v=20260627-2"></script>
+  </body>
+</html>

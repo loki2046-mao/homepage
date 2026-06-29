@@ -1,0 +1,65 @@
+:root {
+  --hiloki-serif: "LXGW WenKai TC", "Noto Serif SC", "Songti SC", serif;
+  --hiloki-display: "Noto Serif SC", "Songti SC", serif;
+  --hiloki-sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --hiloki-mono: "IBM Plex Mono", "SFMono-Regular", "SF Mono", Consolas, monospace;
+  --hiloki-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --hiloki-radius-xl: 30px;
+  --hiloki-radius-lg: 24px;
+  --hiloki-radius-md: 18px;
+  --hiloki-radius-sm: 14px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-width: 320px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+img,
+picture,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

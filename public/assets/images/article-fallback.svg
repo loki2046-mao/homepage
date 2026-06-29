@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" role="img" aria-labelledby="title desc">
+  <title id="title">HiLoki Records</title>
+  <desc id="desc">Loki Live House article fallback cover</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#211610"/>
+      <stop offset="0.55" stop-color="#0d0b0a"/>
+      <stop offset="1" stop-color="#352116"/>
+    </linearGradient>
+    <radialGradient id="light" cx="50%" cy="22%" r="72%">
+      <stop offset="0" stop-color="#d16f3f" stop-opacity=".42"/>
+      <stop offset=".48" stop-color="#d16f3f" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#d16f3f" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="4"/>
+      <feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .08 0"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="750" fill="url(#bg)"/>
+  <rect width="1200" height="750" fill="url(#light)"/>
+  <circle cx="600" cy="340" r="205" fill="none" stroke="#d3a353" stroke-opacity=".25" stroke-width="2"/>
+  <circle cx="600" cy="340" r="132" fill="none" stroke="#d16f3f" stroke-opacity=".34" stroke-width="1"/>
+  <circle cx="600" cy="340" r="42" fill="#d16f3f" fill-opacity=".75"/>
+  <path d="M600 92 462 610h276z" fill="#fff" fill-opacity=".025"/>
+  <g fill="#f4eadb" text-anchor="middle">
+    <text x="600" y="332" font-family="Georgia, serif" font-size="54" letter-spacing="12">HILOKI</text>
+    <text x="600" y="392" font-family="monospace" font-size="18" letter-spacing="8" fill-opacity=".7">RECORDS · 2046</text>
+    <text x="600" y="650" font-family="monospace" font-size="15" letter-spacing="5" fill-opacity=".45">LOKI LIVE HOUSE</text>
+  </g>
+  <rect width="1200" height="750" filter="url(#grain)" opacity=".65"/>
+</svg>
