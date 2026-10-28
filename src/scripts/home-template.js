@@ -369,6 +369,13 @@ export function renderHomeHTML(data = {}, skillPedalData = []) {
           <span class="github-purpose">公开项目、Skill 源码、本网站全部代码</span>
           <span class="github-arrow">→</span>
         </a>
+
+        <nav class="headliner-portals" aria-label="站群入口">
+          <a href="https://loki-os.hiloki.ai/" target="_blank" rel="noopener noreferrer">作品场刊 loki-os</a>
+          <a href="https://kaigong-loki.pages.dev/" target="_blank" rel="noopener noreferrer">开弓试玩</a>
+          <a href="https://loki-os.hiloki.ai/methods/travel-memory/" target="_blank" rel="noopener noreferrer">旅行回忆方法</a>
+          <a href="https://blog.hiloki.ai/" target="_blank" rel="noopener noreferrer">Blog</a>
+        </nav>
         <div class="headliner-stats">
           <div><strong>${escapeHtml(stats.articleCount || posts.length)}</strong><span>篇内容</span></div>
           <div><strong>${escapeHtml(publicProducts.length)}+</strong><span>公开产品</span></div>

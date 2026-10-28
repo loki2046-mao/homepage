@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://hiloki.ai/sitemap.xml

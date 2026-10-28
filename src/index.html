@@ -25,6 +25,39 @@
       content="走进 Loki 的场馆：认识赛博小熊猫 Loki，浏览她的文章、产品、教程、分享与长期创作。"
     />
     <meta name="twitter:image" content="https://hiloki.ai/assets/images/share-cover.png" />
+    <link rel="canonical" href="https://hiloki.ai/" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Person",
+          "@id": "https://loki-os.hiloki.ai/about.html#loki",
+          "name": "Loki",
+          "alternateName": "赛博小熊猫 Loki",
+          "url": "https://hiloki.ai/",
+          "image": "https://hiloki.ai/assets/images/loki-ip-new.png",
+          "sameAs": [
+            "https://github.com/loki2046-mao",
+            "https://loki-os.hiloki.ai/about.html",
+            "https://blog.hiloki.ai",
+            "https://kaigong-loki.pages.dev/",
+            "https://loki-os.hiloki.ai/methods/travel-memory/"
+          ],
+          "description": "赛博小熊猫 Loki：用 AI 做产品、做内容的创作者。公众号「赛博小熊猫 Loki」主理人。"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://hiloki.ai/#website",
+          "url": "https://hiloki.ai/",
+          "name": "HiLoki.ai",
+          "description": "赛博小熊猫 Loki 的个人场馆：文章、产品与公开创作入口。",
+          "publisher": { "@id": "https://loki-os.hiloki.ai/about.html#loki" },
+          "inLanguage": "zh-CN"
+        }
+      ]
+    }
+    </script>
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/favicon-32x32.png" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -78,7 +111,22 @@
       </div>
     </header>
 
-    <main id="venue-root"></main>
+    <main id="venue-root">
+      <section class="crawl-fallback" aria-label="站点简介">
+        <h1>赛博小熊猫 Loki</h1>
+        <p>HiLoki.ai 是赛博小熊猫 Loki 的个人场馆：用 AI 做产品、做内容，也把制作方法留下来。公众号「赛博小熊猫 Loki」。本站不售卖付费 AI 课。</p>
+        <nav aria-label="主要入口">
+          <ul>
+            <li><a href="https://loki-os.hiloki.ai/">作品场刊 loki-os</a></li>
+            <li><a href="https://kaigong-loki.pages.dev/">开弓 · 规范试玩</a></li>
+            <li><a href="https://loki-os.hiloki.ai/methods/travel-memory/">旅行回忆工作流</a></li>
+            <li><a href="https://blog.hiloki.ai/">Blog</a></li>
+            <li><a href="/articles">全部文章</a></li>
+            <li><a href="https://github.com/loki2046-mao">GitHub</a></li>
+          </ul>
+        </nav>
+      </section>
+    </main>
 
     <footer class="venue-footer">
       <div>
@@ -87,6 +135,10 @@
       </div>
       <div class="footer-links">
         <a href="/articles">全部文章</a>
+        <a href="https://loki-os.hiloki.ai/" target="_blank" rel="noopener noreferrer">作品场刊</a>
+        <a href="https://kaigong-loki.pages.dev/" target="_blank" rel="noopener noreferrer">开弓试玩</a>
+        <a href="https://loki-os.hiloki.ai/methods/travel-memory/" target="_blank" rel="noopener noreferrer">旅行回忆</a>
+        <a href="https://blog.hiloki.ai/" target="_blank" rel="noopener noreferrer">Blog</a>
         <a href="https://github.com/loki2046-mao" target="_blank" rel="noopener noreferrer">GitHub</a>
         <a href="mailto:lokimao2046@gmail.com">Email</a>
       </div>
