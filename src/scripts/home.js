@@ -297,7 +297,8 @@ import { renderHomeHTML } from "./home-template.js";
     `;
   }
 
-  if (!root.innerHTML.trim()) {
+  const hasCrawlFallback = Boolean(root.querySelector(".crawl-fallback"));
+  if (hasCrawlFallback || !root.innerHTML.trim()) {
     root.innerHTML = renderHomeHTML(data, skillPedalData);
   }
   const body = document.body;

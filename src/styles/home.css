@@ -3722,3 +3722,31 @@ body:not(.is-backstage-room-open) *:not(.corridor-room-stage):not(.corridor-room
   color: var(--accent-bright);
   border-color: var(--accent);
 }
+
+
+/* GEO portal links — brand accent #B8623C */
+.headliner-portals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin: 18px 0 8px;
+}
+.headliner-portals a {
+  color: #B8623C;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 14px;
+}
+.crawl-fallback {
+  max-width: 720px;
+  margin: 48px auto;
+  padding: 24px;
+  color: inherit;
+}
+.crawl-fallback h1 {
+  font-size: clamp(28px, 5vw, 48px);
+  margin-bottom: 16px;
+}
+.crawl-fallback a {
+  color: #B8623C;
+}
